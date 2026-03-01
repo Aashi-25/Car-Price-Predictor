@@ -27,13 +27,13 @@
                   This app predicts the price of a car you want to sell. Try filling the details below:
                 </p>
 
-                <form action="#" method="post" class="mt-4">
+                <form action="{{ url_for('predict') }}" method="post" class="mt-4">
                   <div class="form-group">
                     <label for="company" class="field-label">Select the company:</label>
                     <select class="selectpicker form-control form-control-lg" id="company" name="company" data-dropup-auto="false" data-live-search="true" title="Select Company" required>
                       <option value="" selected disabled>Select Company</option>
                       {% for company in companies %}
-                      <option value="{{ company }}">{{ company }}</option>
+                      <option value="{{ company }}" {% if selected_company == company %}selected{% endif %}>{{ company }}</option>
                       {% endfor %}
                     </select>
                   </div>
@@ -49,7 +49,7 @@
                     <label for="year" class="field-label">Select Year of Purchase:</label>
                     <select class="selectpicker form-control form-control-lg" id="year" name="year" data-dropup-auto="false" title="Select Year" required>
                       {% for y in years %}
-                      <option value="{{ y }}">{{ y }}</option>
+                      <option value="{{ y }}" {% if selected_year and selected_year|int == y %}selected{% endif %}>{{ y }}</option>
                       {% endfor %}
                     </select>
                   </div>
@@ -58,17 +58,29 @@
                     <label for="fuel_type" class="field-label">Select the Fuel Type:</label>
                     <select class="selectpicker form-control form-control-lg" id="fuel_type" name="fuel_type" data-dropup-auto="false" title="Select Fuel Type" required>
                       {% for fuel in fuel_type %}
-                      <option value="{{ fuel }}">{{ fuel }}</option>
+                      <option value="{{ fuel }}" {% if selected_fuel_type == fuel %}selected{% endif %}>{{ fuel }}</option>
                       {% endfor %}
                     </select>
                   </div>
 
                   <div class="form-group">
                     <label for="kilo_driven" class="field-label">Enter the Number of Kilometres that the car has travelled:</label>
-                    <input type="number" class="form-control form-control-lg" id="kilo_driven" name="kilo_driven" placeholder="Enter the kilometres driven" min="0" required>
+                    <input type="number" class="form-control form-control-lg" id="kilo_driven" name="kilo_driven" placeholder="Enter the kilometres driven" min="0" value="{{ selected_kms_driven }}" required>
                   </div>
 
                   <button type="submit" class="btn btn-primary btn-lg btn-block custom-btn">Predict Price</button>
+
+                  {% if predicted_price is not none %}
+                  <div class="alert alert-success mt-3 text-center" role="alert">
+                    Predicted Price: ₹ {{ "{:,.2f}".format(predicted_price) }}
+                  </div>
+                  {% endif %}
+
+                  {% if error_message %}
+                  <div class="alert alert-danger mt-3 text-center" role="alert">
+                    {{ error_message }}
+                  </div>
+                  {% endif %}
                 </form>
               </div>
             </div>
@@ -126,6 +138,14 @@
         };
 
         renderModelOptions($('#company').val() || '');
+
+        const selectedModel = '{{ selected_model }}';
+        if (selectedModel) {
+          $('#car_model').val(selectedModel);
+          if ($.fn.selectpicker) {
+            $('#car_model').selectpicker('refresh');
+          }
+        }
 
         $('#company').on('change', function () {
           renderModelOptions($(this).val());
